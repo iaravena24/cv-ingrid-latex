@@ -1,0 +1,47 @@
+name: Build & Publish CV (LaTeX)
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Compile LaTeX (xelatex)
+        uses: xu-cheng/latex-action@v2
+        with:
+          root_file: main.tex
+          latexmk_use_xelatex: true
+
+      - name: Prepare site folder
+        run: |
+          mkdir -p public
+          cp main.pdf public/CV_Ingrid_Aravena.pdf
+          cat > public/index.html <<'HTML'
+          <!doctype html>
+          <meta charset="utf-8">
+          <title>CV Ingrid Aravena</title>
+          <style>
+            body{font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial; margin:0; padding:24px;}
+            a{font-weight:700}
+          </style>
+          <h1>CV de Ingrid Aravena</h1>
+          <p><a href="CV_Ingrid_Aravena.pdf" download>⬇️ Descargar PDF</a></p>
+          <embed src="CV_Ingrid_Aravena.pdf" width="100%" height="900px" />
+          HTML
+          touch public/.nojekyll
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./public
+          publish_branch: gh-pages
+          force_orphan: true
+          enable_jekyll: false
+
